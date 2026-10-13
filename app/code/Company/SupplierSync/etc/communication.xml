@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Communication/etc/communication.xsd">
+    <topic name="company.supplier.stock.update" request="Company\SupplierSync\Api\Data\StockUpdateQueueMessageInterface">
+        <handler name="companySupplierStockUpdateHandler"
+                 type="Company\SupplierSync\Model\Queue\StockUpdateConsumer"
+                 method="process"/>
+    </topic>
+</config>

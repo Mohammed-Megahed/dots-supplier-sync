@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd">
+    <route url="/V1/supplier-sync/updates" method="POST">
+        <service class="Company\SupplierSync\Api\StockUpdateManagementInterface" method="postUpdate"/>
+        <resources>
+            <resource ref="Company_SupplierSync::stock_update"/>
+        </resources>
+    </route>
+</routes>

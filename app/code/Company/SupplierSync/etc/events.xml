@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <!-- Order Placement: Reserve Supplier Stock -->
+    <event name="sales_order_place_after">
+        <observer name="company_supplier_sync_order_place_after"
+                  instance="Company\SupplierSync\Observer\OrderPlaceAfterObserver"/>
+    </event>
+
+    <!-- Order Cancellation: Full Order Release -->
+    <event name="order_cancel_after">
+        <observer name="company_supplier_sync_order_cancel_after"
+                  instance="Company\SupplierSync\Observer\OrderCancelAfterObserver"/>
+    </event>
+
+    <!-- Partial Order Item Cancellation -->
+    <event name="sales_order_item_cancel">
+        <observer name="company_supplier_sync_order_item_cancel"
+                  instance="Company\SupplierSync\Observer\OrderItemCancelObserver"/>
+    </event>
+
+    <!-- Refund / Creditmemo: Release Stock on Refund -->
+    <event name="sales_order_creditmemo_save_after">
+        <observer name="company_supplier_sync_creditmemo_save_after"
+                  instance="Company\SupplierSync\Observer\CreditmemoSaveAfterObserver"/>
+    </event>
+</config>

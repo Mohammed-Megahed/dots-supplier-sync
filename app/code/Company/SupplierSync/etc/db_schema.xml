@@ -1,0 +1,124 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <!-- Supplier Entity Table -->
+    <table name="company_supplier" resource="default" engine="innodb" comment="Suppliers Directory">
+        <column xsi:type="int" name="supplier_id" unsigned="true" nullable="false" identity="true" comment="Supplier ID"/>
+        <column xsi:type="varchar" name="supplier_code" length="64" nullable="false" comment="Unique Supplier Code"/>
+        <column xsi:type="varchar" name="name" length="255" nullable="false" comment="Supplier Name"/>
+        <column xsi:type="smallint" name="is_enabled" unsigned="true" nullable="false" default="1" comment="1: Enabled, 0: Disabled"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Creation Time"/>
+        <column xsi:type="timestamp" name="updated_at" on_update="true" nullable="false" default="CURRENT_TIMESTAMP" comment="Update Time"/>
+
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="supplier_id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="COMPANY_SUPPLIER_CODE_UNIQUE">
+            <column name="supplier_code"/>
+        </constraint>
+        <index referenceId="COMPANY_SUPPLIER_IS_ENABLED" indexType="btree">
+            <column name="is_enabled"/>
+        </index>
+    </table>
+
+    <!-- Supplier Inventory & Pricing Table -->
+    <table name="company_supplier_stock" resource="default" engine="innodb" comment="Supplier Stock and Pricing per SKU and Website">
+        <column xsi:type="int" name="stock_id" unsigned="true" nullable="false" identity="true" comment="Stock ID"/>
+        <column xsi:type="int" name="supplier_id" unsigned="true" nullable="false" comment="Supplier ID"/>
+        <column xsi:type="varchar" name="sku" length="64" nullable="false" comment="Product SKU"/>
+        <column xsi:type="smallint" name="website_id" unsigned="true" nullable="false" default="0" comment="Website ID"/>
+        <column xsi:type="decimal" name="quantity" scale="4" precision="12" nullable="false" default="0.0000" comment="Available Physical Supplier Quantity"/>
+        <column xsi:type="decimal" name="reserved_quantity" scale="4" precision="12" nullable="false" default="0.0000" comment="Active Reserved Quantity"/>
+        <column xsi:type="decimal" name="unit_price" scale="4" precision="12" nullable="false" default="0.0000" comment="Unit Price"/>
+        <column xsi:type="varchar" name="currency" length="3" nullable="false" default="USD" comment="Currency Code"/>
+        <column xsi:type="int" name="version" unsigned="true" nullable="false" default="1" comment="Optimistic Lock Version"/>
+        <column xsi:type="timestamp" name="updated_at" on_update="true" nullable="false" default="CURRENT_TIMESTAMP" comment="Last Updated Time"/>
+
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="stock_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="COMPANY_SUPPLIER_STOCK_SUPPLIER_ID"
+                    table="company_supplier_stock" column="supplier_id"
+                    referenceTable="company_supplier" referenceColumn="supplier_id"
+                    onDelete="CASCADE"/>
+        <constraint xsi:type="unique" referenceId="COMPANY_SUPPLIER_STOCK_SUPPLIER_SKU_WEBSITE_UNIQUE">
+            <column name="supplier_id"/>
+            <column name="sku"/>
+            <column name="website_id"/>
+        </constraint>
+        <index referenceId="COMPANY_SUPPLIER_STOCK_SKU_WEBSITE" indexType="btree">
+            <column name="sku"/>
+            <column name="website_id"/>
+        </index>
+    </table>
+
+    <!-- Supplier Stock Audit / Outbox Table -->
+    <table name="company_supplier_stock_audit" resource="default" engine="innodb" comment="Stock Update Audit and Asynchronous Tracking">
+        <column xsi:type="int" name="audit_id" unsigned="true" nullable="false" identity="true" comment="Audit ID"/>
+        <column xsi:type="varchar" name="idempotency_key" length="128" nullable="false" comment="Client Idempotency Key"/>
+        <column xsi:type="varchar" name="supplier_code" length="64" nullable="false" comment="Supplier Code"/>
+        <column xsi:type="varchar" name="sku" length="64" nullable="false" comment="Product SKU"/>
+        <column xsi:type="varchar" name="website_code" length="64" nullable="false" default="base" comment="Website Code"/>
+        <column xsi:type="varchar" name="payload_hash" length="64" nullable="false" comment="SHA-256 of Normalized Payload"/>
+        <column xsi:type="mediumtext" name="request_payload" nullable="false" comment="JSON Raw Request Payload"/>
+        <column xsi:type="varchar" name="status" length="32" nullable="false" default="PENDING" comment="PENDING, PROCESSING, COMPLETED, FAILED, RETRYABLE_FAILED"/>
+        <column xsi:type="smallint" name="attempts" unsigned="true" nullable="false" default="0" comment="Processing Attempts"/>
+        <column xsi:type="mediumtext" name="error_message" nullable="true" comment="Safe Error Description"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Creation Time"/>
+        <column xsi:type="timestamp" name="updated_at" on_update="true" nullable="false" default="CURRENT_TIMESTAMP" comment="Last Updated Time"/>
+
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="audit_id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="COMPANY_SUPPLIER_STOCK_AUDIT_IDEMPOTENCY_UNIQUE">
+            <column name="idempotency_key"/>
+        </constraint>
+        <index referenceId="COMPANY_SUPPLIER_STOCK_AUDIT_STATUS" indexType="btree">
+            <column name="status"/>
+        </index>
+        <index referenceId="COMPANY_SUPPLIER_STOCK_AUDIT_SUPPLIER_SKU" indexType="btree">
+            <column name="supplier_code"/>
+            <column name="sku"/>
+        </index>
+        <index referenceId="COMPANY_SUPPLIER_STOCK_AUDIT_CREATED_AT" indexType="btree">
+            <column name="created_at"/>
+        </index>
+    </table>
+
+    <!-- Supplier Order Item Reservation Table -->
+    <table name="company_supplier_reservation" resource="default" engine="innodb" comment="Supplier Order Item Stock Reservations">
+        <column xsi:type="int" name="reservation_id" unsigned="true" nullable="false" identity="true" comment="Reservation ID"/>
+        <column xsi:type="int" name="order_id" unsigned="true" nullable="false" comment="Order ID"/>
+        <column xsi:type="varchar" name="order_increment_id" length="32" nullable="false" comment="Order Increment ID"/>
+        <column xsi:type="int" name="order_item_id" unsigned="true" nullable="false" comment="Order Item ID"/>
+        <column xsi:type="int" name="supplier_id" unsigned="true" nullable="false" comment="Supplier ID"/>
+        <column xsi:type="varchar" name="sku" length="64" nullable="false" comment="Product SKU"/>
+        <column xsi:type="smallint" name="website_id" unsigned="true" nullable="false" default="0" comment="Website ID"/>
+        <column xsi:type="decimal" name="quantity" scale="4" precision="12" nullable="false" default="0.0000" comment="Reserved Quantity"/>
+        <column xsi:type="decimal" name="released_quantity" scale="4" precision="12" nullable="false" default="0.0000" comment="Quantity Released on Cancel"/>
+        <column xsi:type="varchar" name="status" length="32" nullable="false" default="RESERVED" comment="RESERVED, RELEASED_FULL, RELEASED_PARTIAL"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Creation Time"/>
+        <column xsi:type="timestamp" name="updated_at" on_update="true" nullable="false" default="CURRENT_TIMESTAMP" comment="Last Updated Time"/>
+
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="reservation_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="COMPANY_SUPPLIER_RESERVATION_SUPPLIER_ID"
+                    table="company_supplier_reservation" column="supplier_id"
+                    referenceTable="company_supplier" referenceColumn="supplier_id"
+                    onDelete="CASCADE"/>
+        <constraint xsi:type="unique" referenceId="COMPANY_SUPPLIER_RESERVATION_ORDER_ITEM_UNIQUE">
+            <column name="order_item_id"/>
+        </constraint>
+        <index referenceId="COMPANY_SUPPLIER_RESERVATION_ORDER_ID" indexType="btree">
+            <column name="order_id"/>
+        </index>
+        <index referenceId="COMPANY_SUPPLIER_RESERVATION_SKU_WEBSITE" indexType="btree">
+            <column name="sku"/>
+            <column name="website_id"/>
+        </index>
+        <index referenceId="COMPANY_SUPPLIER_RESERVATION_STATUS" indexType="btree">
+            <column name="status"/>
+        </index>
+    </table>
+</schema>

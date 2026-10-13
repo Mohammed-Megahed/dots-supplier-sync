@@ -1,0 +1,29 @@
+{
+    "name": "company/module-supplier-sync",
+    "description": "Supplier Stock Synchronization & Order Reservation for Magento 2",
+    "type": "magento2-module",
+    "version": "1.0.0",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Mohammed Megahed",
+            "email": "mido.mega2022@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "magento/framework": "*",
+        "magento/module-catalog": "*",
+        "magento/module-store": "*",
+        "magento/module-sales": "*",
+        "magento/module-message-queue": "*"
+    },
+    "autoload": {
+        "files": [
+            "app/code/Company/SupplierSync/registration.php"
+        ],
+        "psr-4": {
+            "Company\\SupplierSync\\": "app/code/Company/SupplierSync/"
+        }
+    }
+}

@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!-- Service Contracts & Repositories Preferences -->
+    <preference for="Company\SupplierSync\Api\Data\SupplierInterface"
+                type="Company\SupplierSync\Model\Supplier"/>
+    <preference for="Company\SupplierSync\Api\SupplierRepositoryInterface"
+                type="Company\SupplierSync\Model\SupplierRepository"/>
+    <preference for="Company\SupplierSync\Api\Data\SupplierSearchResultsInterface"
+                type="Company\SupplierSync\Model\SupplierSearchResults"/>
+
+    <preference for="Company\SupplierSync\Api\Data\SupplierStockInterface"
+                type="Company\SupplierSync\Model\SupplierStock"/>
+    <preference for="Company\SupplierSync\Api\SupplierStockRepositoryInterface"
+                type="Company\SupplierSync\Model\SupplierStockRepository"/>
+
+    <preference for="Company\SupplierSync\Api\Data\StockUpdateAuditInterface"
+                type="Company\SupplierSync\Model\StockUpdateAudit"/>
+    <preference for="Company\SupplierSync\Api\StockUpdateAuditRepositoryInterface"
+                type="Company\SupplierSync\Model\StockUpdateAuditRepository"/>
+
+    <preference for="Company\SupplierSync\Api\Data\StockUpdateInputInterface"
+                type="Company\SupplierSync\Model\Data\StockUpdateInput"/>
+    <preference for="Company\SupplierSync\Api\Data\StockUpdateResponseInterface"
+                type="Company\SupplierSync\Model\Data\StockUpdateResponse"/>
+    <preference for="Company\SupplierSync\Api\StockUpdateManagementInterface"
+                type="Company\SupplierSync\Model\StockUpdateManagement"/>
+
+    <preference for="Company\SupplierSync\Api\Data\ReservationInterface"
+                type="Company\SupplierSync\Model\Reservation"/>
+    <preference for="Company\SupplierSync\Api\ReservationManagementInterface"
+                type="Company\SupplierSync\Model\ReservationManagement"/>
+
+    <preference for="Company\SupplierSync\Api\Data\StockUpdateQueueMessageInterface"
+                type="Company\SupplierSync\Model\Queue\StockUpdateMessage"/>
+
+    <!-- Custom Logger Configuration -->
+    <type name="Company\SupplierSync\Logger\Handler">
+        <arguments>
+            <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+        </arguments>
+    </type>
+
+    <type name="Company\SupplierSync\Logger\Logger">
+        <arguments>
+            <argument name="name" xsi:type="string">supplierSyncLogger</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="system" xsi:type="object">Company\SupplierSync\Logger\Handler</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <!-- Inject Logger into Services -->
+    <type name="Company\SupplierSync\Model\StockUpdateManagement">
+        <arguments>
+            <argument name="logger" xsi:type="object">Company\SupplierSync\Logger\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Company\SupplierSync\Model\Queue\StockUpdatePublisher">
+        <arguments>
+            <argument name="logger" xsi:type="object">Company\SupplierSync\Logger\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Company\SupplierSync\Model\Queue\StockUpdateConsumer">
+        <arguments>
+            <argument name="logger" xsi:type="object">Company\SupplierSync\Logger\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Company\SupplierSync\Model\ReservationManagement">
+        <arguments>
+            <argument name="logger" xsi:type="object">Company\SupplierSync\Logger\Logger</argument>
+        </arguments>
+    </type>
+
+    <!-- Console Commands Registration -->
+    <type name="Magento\Framework\Console\CommandListInterface">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="supplierSyncRetryCommand" xsi:type="object">Company\SupplierSync\Console\Command\RetryFailedUpdatesCommand</item>
+                <item name="supplierCreateCommand" xsi:type="object">Company\SupplierSync\Console\Command\CreateSupplierCommand</item>
+                <item name="supplierSimulateConcurrencyCommand" xsi:type="object">Company\SupplierSync\Console\Command\SimulateConcurrencyCommand</item>
+                <item name="supplierSimulateWorkerCommand" xsi:type="object">Company\SupplierSync\Console\Command\SimulateWorkerCommand</item>
+            </argument>
+        </arguments>
+    </type>
+</config>
